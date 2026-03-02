@@ -29,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .then((userCredential) => {
           // Signed up
           const user = userCredential.user;
+          alert("Logging in...");
           window.location.href = "grand.html";
           // ...
         })
