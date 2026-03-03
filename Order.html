@@ -10,11 +10,21 @@
 <body>
     <div class="order_form"> 
         <form id="orderForm">
-            <input type="text" id="item" placeholder="Item name" required>
-            <input type="number" id="quantity" placeholder="Quantity" required>
-            <input type="number" id="total" placeholder="Total price" required>
+            <label for="foodItem">Select Food Item:</label>
+            <select id="foodItem" required>
+                <option value="" disabled selected>-- Select an item --</option>
+                <option value="pizza" data-price="12.50">Pizza (12.50)</option>
+                <option value="burger" data-price="8.00">Burger (8.00)</option>
+                <option value="salad" data-price="7.25">Salad (7.25)</option>
+                <option value="pasta" data-price="10.75">Pasta (10.75)</option>
+            </select>
+            <label for="quantity">Quantity:</label>
+            <input type="number" id="quantity" value="1" min="1" required>
+            <label for="totalDisplay">Total Price:</label>
+            <span id="totalDisplay">0.00</span>
+            <input type="hidden" id="total" name="total"> <!-- Hidden input to send total with form -->
             <button type="submit">Place Order</button>
-           </form>
+        </form>
     </div>           
 </body>
 </html>

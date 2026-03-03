@@ -1,5 +1,8 @@
+// OrderSend.js
+
+// Import the functions you need from the Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
 
@@ -18,43 +21,114 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app); // Initialize Firestore here
 
-const orderForm = document.getElementById("orderForm");
+// Get references to HTML elements (updated for new structure)
+const foodItemSelect = document.getElementById('foodItem');
+const quantityInput = document.getElementById('quantity');
+const totalDisplaySpan = document.getElementById('totalDisplay');
+const totalHiddenInput = document.getElementById('total');
+const orderForm = document.getElementById('orderForm');
 
-// We are using DOM manipulation to grab the form from the webpage
+let currentUserId = null; // To store the authenticated user's ID
 
-// We want to listen for the submit event on the form, and when it happens, we want to execute a function that will handle the order submission
+// Set up anonymous authentication listener
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUserId = user.uid;
+    console.log("Logged in anonymously with UID:", currentUserId);
+  } else {
+    // If no user is logged in, sign in anonymously
+    signInAnonymously(auth)
+      .then(() => {
+        // User is now logged in anonymously, onAuthStateChanged will be triggered again
+      })
+      .catch((error) => {
+        console.error("Error signing in anonymously:", error);
+        alert("Failed to authenticate. Please try again.");
+      });
+  }
+});
+
+// Function to calculate and update the total price
+function calculateTotal() {
+    // Ensure an option is selected before trying to read its data
+    if (foodItemSelect.value === "") {
+        totalDisplaySpan.textContent = '0.00';
+        totalHiddenInput.value = '0.00';
+        return;
+    }
+
+    const selectedOption = foodItemSelect.options[foodItemSelect.selectedIndex];
+    const price = parseFloat(selectedOption.dataset.price || '0');
+    const quantity = parseInt(quantityInput.value, 10);
+
+    if (!isNaN(price) && price > 0 && !isNaN(quantity) && quantity > 0) {
+        const total = (price * quantity).toFixed(2);
+        totalDisplaySpan.textContent = total;
+        totalHiddenInput.value = total; // Set hidden input value for form submission
+    } else {
+        totalDisplaySpan.textContent = '0.00';
+        totalHiddenInput.value = '0.00';
+    }
+}
+
+// Event listeners for changes in item selection or quantity to recalculate total
+foodItemSelect.addEventListener('change', calculateTotal);
+quantityInput.addEventListener('input', calculateTotal);
+
+// Initial calculation when the page loads, after DOM content is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Ensure a default item is selected for initial calculation if not already done by HTML
+    if (foodItemSelect.value === "") {
+        // Find the first non-disabled option and select it
+        for (let i = 0; i < foodItemSelect.options.length; i++) {
+            if (!foodItemSelect.options[i].disabled) {
+                foodItemSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+    calculateTotal();
+});
+
+
+// Handle form submission
 orderForm.addEventListener("submit", async (e) => {
- e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
 
- const user = auth.currentUser;
- // whoever is currently logged in, we want to grab their user information so we can associate the order with that user in the database
+    if (!currentUserId) {
+        alert("Authentication in progress. Please wait a moment and try again.");
+        return;
+    }
 
- if (!user) {
-   alert("You must be logged in.");
-   return;
- }
- // if user is not logged in, send a alert
+    const selectedItemOption = foodItemSelect.options[foodItemSelect.selectedIndex];
+    // We'll store the text of the selected option as the item name
+    const item = selectedItemOption.textContent.split('(')[0].trim(); 
+    const quantity = parseInt(quantityInput.value, 10);
+    const total = parseFloat(totalHiddenInput.value); // Get the calculated total from the hidden input
 
- const item = document.getElementById("item").value;
- const quantity = Number(document.getElementById("quantity").value);
- const total = Number(document.getElementById("total").value);
- // we are grabbing the values from the form inputs and converting quantity and total to numbers
+    if (!item || quantity <= 0 || isNaN(total) || total <= 0) {
+        alert("Please select a valid item and quantity.");
+        return;
+    }
 
- // try-catch is done for error handling
- try {
-   await addDoc(collection(db, "orders"), {
-     userId: user.uid,
-     item: item,
-     quantity: quantity,
-     total: total,
-     createdAt: serverTimestamp()
-   });
+    try {
+        await addDoc(collection(db, "orders"), {
+            userId: currentUserId, // Use the authenticated user's UID
+            item: item,
+            quantity: quantity,
+            total: total,
+            status: "pending", // Add the status field
+            timestamp: serverTimestamp() // Use serverTimestamp for accuracy
+        });
 
-   alert("Order placed successfully!");
-   orderForm.reset();
+        alert("Order placed successfully!");
+        orderForm.reset(); // Clear the form
+        // Reset dropdown and recalculate total after clearing
+        foodItemSelect.selectedIndex = 0; // Select the '-- Select an item --' option
+        calculateTotal(); 
 
- } catch (error) {
-   console.error("Error adding order:", error);
-   alert("Error placing order. Please try again.");
- }
+    } catch (error) {
+        console.error("Error adding order:", error);
+        alert("Error placing order. Please try again.");
+    }
 });
