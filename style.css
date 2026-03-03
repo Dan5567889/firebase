@@ -33,3 +33,9 @@ input{
     margin: 4px 2px;
     cursor: pointer;
 }
+
+.order_form{
+    display: flex;
+    flex-direction: column;
+    width: 64%;
+}

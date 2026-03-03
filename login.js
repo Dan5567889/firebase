@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Signed up
           const user = userCredential.user;
           alert("Logging in...");
-          window.location.href = "grand.html";
+          window.location.href = "Order.html";
           // ...
         })
         .catch((error) => {
