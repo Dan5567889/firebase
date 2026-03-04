@@ -1,24 +1,36 @@
 .form_container{
     font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     padding: 0;
-    height: 100vh;
-    display: flex;
+    height:90vh;
+    display:flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
 }
-
 form{
-    display: flex;
+    display:flex;
     flex-direction: column;
     width:64%;
 }
 
+.order_form{
+    display:flex;
+    flex-direction: column;
+    width:64%;
+}
+body{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height:100vh;
+    background-color: #4ec9f257;
+}
 input{
-    width:100%;
-    padding:12px 20px;
-    margin:8px 0;
-    box-sizing:border-box;
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
 }
 
 .black_button{
@@ -32,10 +44,4 @@ input{
     font-size: 16px;
     margin: 4px 2px;
     cursor: pointer;
-}
-
-.order_form{
-    display: flex;
-    flex-direction: column;
-    width: 64%;
 }
